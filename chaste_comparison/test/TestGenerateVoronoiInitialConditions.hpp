@@ -38,6 +38,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cxxtest/TestSuite.h>
 
+#include <cmath>
+
 #include "VoronoiVertexMeshGenerator.hpp"
 #include "MutableVertexMesh.hpp"
 #include "VertexMeshWriter.hpp"
@@ -49,7 +51,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 bool CustomComparisonForPair(std::pair<unsigned, double> pair_a, std::pair<unsigned, double> pair_b)
 {
-    return (pair_a.second < pair_b.second);
+    return (pair_a.second > pair_b.second);
 }
 
 
@@ -95,9 +97,14 @@ public:
     {
     #if BOOST_VERSION >= 105200
 
+        unsigned num_elems_to_keep = 100;
+        unsigned approx_rad = std::ceil(sqrt(num_elems_to_keep/M_PI)) + 1;
+
         // Generate a mesh that is 10 cells wide, 10 high, with 3 Lloyd's relaxation steps and target average element area 0.5
-        VoronoiVertexMeshGenerator generator(10, 10, 10, 0.5);
+        VoronoiVertexMeshGenerator generator(2 * approx_rad, 2 * approx_rad, 10, 0.5);
         MutableVertexMesh<2,2>* p_mesh = generator.GetMeshAfterReMesh();
+
+        PRINT_VARIABLE(p_mesh->GetNumAllElements());
 
         c_vector<double, 2> upper_corner = p_mesh->CalculateBoundingBox().rGetUpperCorner().rGetLocation();
         c_vector<double, 2> lower_corner = p_mesh->CalculateBoundingBox().rGetLowerCorner().rGetLocation();
@@ -114,10 +121,20 @@ public:
         std::sort(elem_to_dist.begin(), elem_to_dist.end(), CustomComparisonForPair);
 
 
-        for (unsigned i = 0; i < elem_to_dist.size(); i++)
+        for (unsigned i = 0; i < p_mesh->GetNumAllElements() - num_elems_to_keep; i++)
         {
-            PRINT_2_VARIABLES(elem_to_dist[i].first, elem_to_dist[i].second);
+            p_mesh->DeleteElementPriorToReMesh(elem_to_dist[i].first);
         }
+
+        p_mesh->ReMesh();
+
+        // Create a vertex mesh writer
+        VertexMeshWriter<2,2> vertex_mesh_writer("TestGenerateCircularVoronoi", "voronoi_circular_50");
+        vertex_mesh_writer.WriteFilesUsingMesh(*p_mesh);
+        vertex_mesh_writer.WriteVtkUsingMesh(*p_mesh,"");
+
+        TS_ASSERT_EQUALS(p_mesh->GetNumAllElements(), num_elems_to_keep);
+
 
 
 
