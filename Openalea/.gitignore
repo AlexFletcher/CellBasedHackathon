@@ -19,6 +19,8 @@
 build/
 ~          
 
+venv-py27
+
 # Temporary files
 *~
 
