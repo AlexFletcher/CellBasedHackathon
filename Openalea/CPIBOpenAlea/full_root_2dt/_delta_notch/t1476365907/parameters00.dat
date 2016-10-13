@@ -1,0 +1,11 @@
+timestep
+    100
+initial_values
+delta_notch
+    a : 0.01
+    h : 2
+    k : 2
+    b : 100
+    v : 1.0
+fixed
+
