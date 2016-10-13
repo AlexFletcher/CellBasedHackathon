@@ -1,0 +1,29 @@
+
+**/*.o
+**/*.so
+**/*.a
+**/*.out
+**/*.pdf
+**/*.pyc
+
+**/*.fatbin
+**/*.fatbin.c
+**/*.reg.c
+**/*.cubin
+**/.AppleDouble
+**/Makefile
+**/cmake_install.cmake
+**/CMakeFiles
+**/CMakeCache.txt
+**/.idea
+build/
+~          
+
+venv-py27
+
+# Temporary files
+*~
+
+# OS X files
+.DS_Store
+.DS_Store?
