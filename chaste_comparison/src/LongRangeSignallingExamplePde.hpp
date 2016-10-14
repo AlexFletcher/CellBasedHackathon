@@ -44,6 +44,7 @@ private:
        archive & mDuDtCoefficient;
        archive & mDiffusionCoefficient;
        archive & mSourceCoefficient;
+       archive & mSinkCoefficient;
     }
 
 protected:
@@ -57,8 +58,13 @@ protected:
     /** Diffusion coefficient. */
     double mDiffusionCoefficient;
 
-    /** Coefficient of the rate of uptake of the dependent variable by non-apoptotic cells. */
+    /** Coefficient of the rate of release within labelled cells. */
     double mSourceCoefficient;
+
+    /** Coefficient of the rate of uptake of the dependent variable within any cell.
+     * Note: This variable is to be defined positive, the minus sign is added in code.
+     */
+    double mSinkCoefficient;
 
 public:
 

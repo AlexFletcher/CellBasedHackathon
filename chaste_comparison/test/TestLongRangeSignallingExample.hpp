@@ -42,6 +42,7 @@ public:
         std::vector<CellPtr> cells;
         MAKE_PTR(WildTypeCellMutationState, p_state);
         MAKE_PTR(DifferentiatedCellProliferativeType, p_transit_type);
+        MAKE_PTR(CellLabel, p_label);
 //        boost::shared_ptr<AbstractCellProperty> p_label(CellPropertyRegistry::Instance()->Get<CellLabel>());
         for (unsigned i=0; i<num_cells_across*num_cells_across; i++)
         {
@@ -50,6 +51,7 @@ public:
             CellPtr p_cell(new Cell(p_state, p_cycle_model));
             p_cell->SetCellProliferativeType(p_transit_type);
             p_cell->GetCellData()->SetItem("Morphogen", 1.0);
+		    p_cell->AddCellProperty(p_label);
             cells.push_back(p_cell);
         }
 
@@ -80,6 +82,7 @@ public:
         MAKE_PTR_ARGS(AveragedSourceParabolicPde<2>, p_pde, (cell_population, 1.0, diffusion_coefficient, uptake_rate));
         MAKE_PTR_ARGS(ConstBoundaryCondition<2>, p_bc, (1.0));
 
+        // Todo: make a modifier to Change Cell Labels etc depending on concentration.
         // Create a ChasteCuboid on which to base the finite element mesh used to solve the PDE
         ChastePoint<2> lower(-10.0, -10.0);
         ChastePoint<2> upper(10.0, 10.0);

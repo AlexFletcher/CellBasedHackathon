@@ -33,65 +33,79 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "CellwiseSourceParabolicPde.hpp"
+#include "LongRangeSignallingExamplePde.hpp"
 #include "Exception.hpp"
 
 template<unsigned DIM>
-CellwiseSourceParabolicPde<DIM>::CellwiseSourceParabolicPde(AbstractCellPopulation<DIM,DIM>& rCellPopulation,
+LongRangeSignallingExamplePde<DIM>::LongRangeSignallingExamplePde(AbstractCellPopulation<DIM,DIM>& rCellPopulation,
                                                             double duDtCoefficient,
                                                             double diffusionCoefficient,
-                                                            double sourceCoefficient)
+                                                            double sourceCoefficient,
+                                                            double sinkCoefficient)
     : mrCellPopulation(rCellPopulation),
       mDuDtCoefficient(duDtCoefficient),
       mDiffusionCoefficient(diffusionCoefficient),
-      mSourceCoefficient(sourceCoefficient)
+      mSourceCoefficient(sourceCoefficient),
+      mSinkCoefficient(sinkCoefficient)
 {
 }
 
 template<unsigned DIM>
-const AbstractCellPopulation<DIM,DIM>& CellwiseSourceParabolicPde<DIM>::rGetCellPopulation() const
+const AbstractCellPopulation<DIM,DIM>& LongRangeSignallingExamplePde<DIM>::rGetCellPopulation() const
 {
     return mrCellPopulation;
 }
 
 template<unsigned DIM>
-double CellwiseSourceParabolicPde<DIM>::ComputeDuDtCoefficientFunction(const ChastePoint<DIM>& )
+double LongRangeSignallingExamplePde<DIM>::ComputeDuDtCoefficientFunction(const ChastePoint<DIM>& )
 {
     return mDuDtCoefficient;
 }
 
 template<unsigned DIM>
-double CellwiseSourceParabolicPde<DIM>::ComputeSourceTerm(const ChastePoint<DIM>& rX, double u, Element<DIM,DIM>* pElement)
+double LongRangeSignallingExamplePde<DIM>::ComputeSourceTerm(const ChastePoint<DIM>& rX, double u, Element<DIM,DIM>* pElement)
 {
     NEVER_REACHED;
     return 0.0;
 }
 
 template<unsigned DIM>
-double CellwiseSourceParabolicPde<DIM>::ComputeSourceTermAtNode(const Node<DIM>& rNode, double u)
+double LongRangeSignallingExamplePde<DIM>::ComputeSourceTermAtNode(const Node<DIM>& rNode, double u)
 {
-    double source_coefficient = 0.0;
+    double source_term = 0.0;
 
-    if (mrCellPopulation.IsPdeNodeAssociatedWithNonApoptoticCell(rNode.GetIndex()))
+    // here do: if mrCellPopulation.GetCellCorrespondingToNode(rNode).HasLabel do sink and source
+    // else: do sink only
+    // Todo: define which property distinguishes our red and green cells (I would guess we would use
+    // cell labels.
+    std::set<unsigned> neighbour_containing_elements =
+            GetNode(neighbour_location_index)->rGetContainingElementIndices();
+
+    unsigned elem_index = *(element_indices.begin());
+    CellPtr p_cell = this->GetCellUsingLocationIndex(elem_index);
+    if (cell_iter->HasCellProperty<CellLabel>())
     {
-        source_coefficient = mSourceCoefficient;
+        source_term = mSourceCoefficient - mSinkCoefficient*u;
+    }
+    else
+    {
+        source_term = -mSinkCoefficient*u;
     }
 
-    // The source term is C*u
-    return source_coefficient*u;
+    return source_term;
 }
 
 template<unsigned DIM>
-c_matrix<double,DIM,DIM> CellwiseSourceParabolicPde<DIM>::ComputeDiffusionTerm(const ChastePoint<DIM>& rX, Element<DIM,DIM>* pElement)
+c_matrix<double,DIM,DIM> LongRangeSignallingExamplePde<DIM>::ComputeDiffusionTerm(const ChastePoint<DIM>& rX, Element<DIM,DIM>* pElement)
 {
     return mDiffusionCoefficient*identity_matrix<double>(DIM);
 }
 
 // Explicit instantiation
-template class CellwiseSourceParabolicPde<1>;
-template class CellwiseSourceParabolicPde<2>;
-template class CellwiseSourceParabolicPde<3>;
+template class LongRangeSignallingExamplePde<1>;
+template class LongRangeSignallingExamplePde<2>;
+template class LongRangeSignallingExamplePde<3>;
 
 // Serialization for Boost >= 1.36
 #include "SerializationExportWrapperForCpp.hpp"
-EXPORT_TEMPLATE_CLASS_SAME_DIMS(CellwiseSourceParabolicPde)
+EXPORT_TEMPLATE_CLASS_SAME_DIMS(LongRangeSignallingExamplePde)
