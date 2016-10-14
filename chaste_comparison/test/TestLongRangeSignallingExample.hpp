@@ -17,7 +17,7 @@
 #include "VolumeConstraintPottsUpdateRule.hpp"
 #include "AdhesionPottsUpdateRule.hpp"
 #include "SurfaceAreaConstraintPottsUpdateRule.hpp"
-
+#include "LongRangeSignallingExamplePde.hpp"
 // This test is always run sequentially (never in parallel)
 #include "FakePetscSetup.hpp"
 
@@ -69,8 +69,8 @@ public:
         // Create some update rules and add them to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         simulator.AddUpdateRule(p_volume_constraint_update_rule);
-        MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_area_update_rule);
-        simulator.AddUpdateRule(p_surface_area_update_rule);
+//        MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_area_update_rule);
+//        simulator.AddUpdateRule(p_surface_area_update_rule);
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
         simulator.AddUpdateRule(p_adhesion_update_rule);
 
@@ -79,8 +79,10 @@ public:
         // Create PDE and boundary condition
         double diffusion_coefficient = 1.0;
         double uptake_rate = 1.0;
-        MAKE_PTR_ARGS(AveragedSourceParabolicPde<2>, p_pde, (cell_population, 1.0, diffusion_coefficient, uptake_rate));
-        MAKE_PTR_ARGS(ConstBoundaryCondition<2>, p_bc, (1.0));
+        double sink_rate = 1.0;
+        MAKE_PTR_ARGS(LongRangeSignallingExamplePde<2>, p_pde, (cell_population, 1.0, diffusion_coefficient, uptake_rate, sink_rate));
+        // making neumann boundary condition
+        MAKE_PTR_ARGS( ConstBoundaryCondition<2>, p_bc, (0.0) );
 
         // Todo: make a modifier to Change Cell Labels etc depending on concentration.
         // Create a ChasteCuboid on which to base the finite element mesh used to solve the PDE

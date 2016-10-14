@@ -35,6 +35,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "LongRangeSignallingExamplePde.hpp"
 #include "Exception.hpp"
+#include "CellLabel.hpp"
 
 template<unsigned DIM>
 LongRangeSignallingExamplePde<DIM>::LongRangeSignallingExamplePde(AbstractCellPopulation<DIM,DIM>& rCellPopulation,
@@ -74,16 +75,17 @@ double LongRangeSignallingExamplePde<DIM>::ComputeSourceTermAtNode(const Node<DI
 {
     double source_term = 0.0;
 
+    Node<DIM>& r_non_const_node = const_cast< Node<DIM>& >(rNode);
+
     // here do: if mrCellPopulation.GetCellCorrespondingToNode(rNode).HasLabel do sink and source
     // else: do sink only
     // Todo: define which property distinguishes our red and green cells (I would guess we would use
     // cell labels.
-    std::set<unsigned> neighbour_containing_elements =
-            GetNode(neighbour_location_index)->rGetContainingElementIndices();
+    const std::set<unsigned> neighbour_containing_elements = r_non_const_node.rGetContainingElementIndices();
 
-    unsigned elem_index = *(element_indices.begin());
-    CellPtr p_cell = this->GetCellUsingLocationIndex(elem_index);
-    if (cell_iter->HasCellProperty<CellLabel>())
+    unsigned elem_index = *(neighbour_containing_elements.begin());
+    CellPtr p_cell = mrCellPopulation.GetCellUsingLocationIndex(elem_index);
+    if (p_cell->HasCellProperty<CellLabel>())
     {
         source_term = mSourceCoefficient - mSinkCoefficient*u;
     }

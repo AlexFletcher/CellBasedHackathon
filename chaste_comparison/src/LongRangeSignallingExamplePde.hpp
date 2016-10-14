@@ -79,7 +79,8 @@ public:
     LongRangeSignallingExamplePde(AbstractCellPopulation<DIM, DIM>& rCellPopulation,
                                double duDtCoefficient=1.0,
                                double diffusionCoefficient=1.0,
-                               double sourceCoefficient=0.0);
+                               double sourceCoefficient=0.0,
+                               double sinkCoefficient=0.0);
 
     /**
      * @return const reference to the cell population (used in archiving).
