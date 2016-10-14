@@ -44,10 +44,51 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MutableVertexMesh.hpp"
 #include "VertexMeshWriter.hpp"
 #include "VertexMeshReader.hpp"
-
+#include "PottsMesh.hpp"
+#include "PottsMeshWriter.hpp"
+#include "PottsMeshGenerator.hpp"
 #include "Debug.hpp"
 
 #include "FakePetscSetup.hpp"
+
+
+void GeneratePottsFromVertexMesh(PottsMesh<2>* pPottsMesh, VertexMesh<2,2>*  pVertexMesh)
+{
+   
+    PRINT_2_VARIABLES(pPottsMesh->GetNumNodes(),pPottsMesh->GetNumElements());
+ 
+    unsigned element_counter = 0;
+    for (VertexMesh<2,2>::VertexElementIterator iter = pVertexMesh->GetElementIteratorBegin();
+         iter != pVertexMesh->GetElementIteratorEnd();
+         ++iter)
+    {
+        unsigned element_index = iter->GetIndex();
+
+        std::vector<Node<2>*> nodes_in_element;
+        
+        for (PottsMesh<2>::NodeIterator node_iter = pPottsMesh->GetNodeIteratorBegin();
+             node_iter != pPottsMesh->GetNodeIteratorEnd();
+             ++node_iter)
+        {
+            unsigned node_index = node_iter->GetIndex();
+
+            // you need to make the ElementIncludesPoint method public for this to work.
+            if (pVertexMesh->ElementIncludesPoint(node_iter->rGetLocation(),element_index))
+            {
+                nodes_in_element.push_back(pPottsMesh->GetNode(node_index));
+            }           
+        }
+
+        assert(nodes_in_element.size()>0);
+
+        pPottsMesh->AddElement(new PottsElement<2>(element_counter, nodes_in_element));
+
+        element_counter++;
+    }
+
+    PRINT_2_VARIABLES(pPottsMesh->GetNumNodes(),pPottsMesh->GetNumElements());
+}
+
 
 bool CustomComparisonForPair(std::pair<unsigned, double> pair_a, std::pair<unsigned, double> pair_b)
 {
@@ -135,7 +176,30 @@ public:
 
         TS_ASSERT_EQUALS(p_mesh->GetNumAllElements(), num_elems_to_keep);
 
+        // Convert to a potts mesh 
 
+        double lattice_size = 0.1;
+        double domain_size = 20;
+
+        double num_nodes_across = domain_size/lattice_size;
+
+        PottsMeshGenerator<2> potts_generator(num_nodes_across, 0, 0, num_nodes_across, 0, 0); 
+
+        PottsMesh<2>* p_potts_mesh = potts_generator.GetMesh();
+
+        p_potts_mesh->Translate(-0.5*num_nodes_across, -0.5*num_nodes_across);
+        p_potts_mesh->Scale(lattice_size,lattice_size,lattice_size);    
+
+        GeneratePottsFromVertexMesh(p_potts_mesh,p_mesh);
+
+        PottsMeshWriter<2> potts_mesh_writer("TestGeneratePottsFromVertex", "potts_mesh");
+
+        TS_ASSERT_EQUALS(p_potts_mesh->GetNumAllElements(), num_elems_to_keep);
+        TS_ASSERT_EQUALS(p_potts_mesh->GetNumNodes(), num_nodes_across*num_nodes_across);
+
+
+        // Write and check it's correct
+        potts_mesh_writer.WriteFilesUsingMesh(*p_potts_mesh);
 
 
     #endif // BOOST_VERSION >= 105200
